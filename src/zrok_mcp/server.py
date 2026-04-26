@@ -5,7 +5,7 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP(
     "zrok",
     host=os.environ.get("ZROK_MCP_HOST", "0.0.0.0"),
-    port=int(os.environ.get("ZROK_MCP_PORT", "8000")),
+    port=int(os.environ.get("ZROK_MCP_PORT", os.environ.get("PORT", "8000"))),
     instructions="""Zrok MCP server for managing secure tunnels and shares.
 
 This server provides tools to manage zrok environments, create/access shares,
