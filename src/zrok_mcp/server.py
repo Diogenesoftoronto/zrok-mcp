@@ -1,6 +1,12 @@
+import os
+
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("zrok", instructions="""Zrok MCP server for managing secure tunnels and shares.
+mcp = FastMCP(
+    "zrok",
+    host=os.environ.get("ZROK_MCP_HOST", "0.0.0.0"),
+    port=int(os.environ.get("ZROK_MCP_PORT", "8000")),
+    instructions="""Zrok MCP server for managing secure tunnels and shares.
 
 This server provides tools to manage zrok environments, create/access shares,
 and view account status. Requires zrok2 CLI installed and a zrok account.
@@ -8,7 +14,8 @@ and view account status. Requires zrok2 CLI installed and a zrok account.
 Each tool accepts an `action` parameter that selects the operation:
   zrok_env:    status | enable | disable
   zrok_share:  create | delete | list
-  zrok_access: create | delete | list""")
+  zrok_access: create | delete | list""",
+)
 
 
 def _root():
@@ -270,7 +277,8 @@ def zrok_access(
 
 
 def main():
-    mcp.run(transport="stdio")
+    transport = os.environ.get("ZROK_MCP_TRANSPORT", "stdio")
+    mcp.run(transport=transport)
 
 
 if __name__ == "__main__":

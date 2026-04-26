@@ -2,6 +2,8 @@
 
 An [MCP server](https://modelcontextprotocol.io/) for [zrok](https://zrok.io/) — the open-source secure sharing platform built on OpenZiti. Lets AI agents manage zrok tunnels, shares, and access programmatically.
 
+Supports **three transports**: stdio (local), streamable-http and SSE (remote/Bifrost).
+
 ## Tools
 
 Each tool uses an `action` parameter to select the operation — no need to remember many tool names.
@@ -42,10 +44,31 @@ pip install -e .
 
 ## Run
 
-### STDIO (for Claude Desktop, Cursor, etc.)
+Transport is selected via the `ZROK_MCP_TRANSPORT` environment variable (default: `stdio`).
+
+| Transport | Use case |
+|-----------|----------|
+| `stdio` | Local clients (Claude Desktop, Cursor, Crush) |
+| `streamable-http` | Remote / Bifrost gateway (recommended) |
+| `sse` | Remote / Bifrost gateway (legacy SSE) |
+
+### STDIO (default)
 
 ```bash
 zrok-mcp
+```
+
+### Streamable HTTP (remote)
+
+```bash
+ZROK_MCP_TRANSPORT=streamable-http ZROK_MCP_PORT=8000 zrok-mcp
+```
+
+### Docker (remote)
+
+```bash
+docker build -t zrok-mcp .
+docker run -p 8000:8000 -v ~/.zrok2:/root/.zrok2 zrok-mcp
 ```
 
 ### With MCP Inspector
@@ -54,9 +77,17 @@ zrok-mcp
 mcp dev src/zrok_mcp/server.py
 ```
 
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ZROK_MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `streamable-http`, or `sse` |
+| `ZROK_MCP_HOST` | `0.0.0.0` | Bind host (HTTP/SSE transports) |
+| `ZROK_MCP_PORT` | `8000` | Bind port (HTTP/SSE transports) |
+
 ## Configuration
 
-### Claude Desktop
+### Claude Desktop (stdio)
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -71,7 +102,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-### Cursor / Crush
+### Cursor / Crush (stdio)
 
 Add to your crush settings or MCP config:
 
@@ -83,6 +114,33 @@ Add to your crush settings or MCP config:
   }
 }
 ```
+
+### Bifrost AI Gateway (streamable-http)
+
+1. Deploy zrok-mcp as a remote HTTP server (Docker, Railway, etc.)
+2. In the Bifrost Web UI, go to **MCP Gateway** → **New MCP Server**
+3. Select **HTTP** as the connection type
+4. Enter the URL: `http://your-zrok-mcp-host:8000/mcp`
+5. Set `tools_to_execute` to `["*"]` (or filter as needed)
+
+Or via config file:
+
+```json
+{
+  "mcp": {
+    "mcp_clients": [
+      {
+        "name": "zrok",
+        "connection_type": "http",
+        "connection_string": "http://your-zrok-mcp-host:8000/mcp",
+        "tools_to_execute": ["*"]
+      }
+    ]
+  }
+}
+```
+
+For SSE transport, use `connection_type: "sse"` and `connection_string: "http://your-zrok-mcp-host:8000/sse"`.
 
 ## Example Usage
 
